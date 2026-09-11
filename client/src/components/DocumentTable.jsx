@@ -1000,9 +1000,15 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">
                                         {k.replace(/_/g, ' ')}
                                       </span>
-                                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block break-words">
-                                        {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                                      </span>
+                                      <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block break-words">
+                                        {typeof v === 'object' ? (
+                                          <pre className="mt-1 p-2 bg-slate-900 text-emerald-400 rounded text-[9px] overflow-x-auto whitespace-pre-wrap font-mono">
+                                            {JSON.stringify(v, null, 2)}
+                                          </pre>
+                                        ) : (
+                                          String(v)
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -1121,9 +1127,15 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">
                                   {k.replace(/_/g, ' ')}
                                 </span>
-                                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block break-words">
-                                  {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                                </span>
+                                <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block break-words">
+                                  {typeof v === 'object' ? (
+                                    <pre className="mt-1 p-2 bg-slate-900 text-emerald-400 rounded text-[9px] overflow-x-auto whitespace-pre-wrap font-mono">
+                                      {JSON.stringify(v, null, 2)}
+                                    </pre>
+                                  ) : (
+                                    String(v)
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
