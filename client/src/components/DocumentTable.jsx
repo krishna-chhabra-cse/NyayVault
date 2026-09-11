@@ -1163,12 +1163,9 @@ export default function DocumentTable({ documents = [], onRefresh }) {
           <RedactionModal 
             doc={redactingDoc} 
             onClose={() => setRedactingDoc(null)} 
-            onComplete={(newDoc) => {
+            onComplete={() => {
               setRedactingDoc(null);
               if (onRefresh) onRefresh();
-              if (newDoc) {
-                setSelectedDoc(newDoc);
-              }
             }} 
           />
         )}

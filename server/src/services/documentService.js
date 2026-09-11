@@ -342,13 +342,6 @@ export async function applyRedactionsToDocument(documentId, redactions, user, ip
   // Upload to MinIO / Local storage
   await uploadObject({ key: newStorageKey, buffer, contentType: 'text/plain' });
 
-  // Insert into DB with document_category matching originalDoc so it's visible in dockets
-  const sql = `
-    INSERT INTO documents 
-    (id, case_id, filename, storage_key, mime_type, file_size, sha256_hash, status, document_type, document_category, classification_confidence, extracted_text, metadata, uploaded_by, is_redacted, parent_document_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-    RETURNING *;
-  `;
   // Verify user exists or fallback to original uploader to satisfy foreign key constraint
   let effectiveUserId = user?.id;
   if (effectiveUserId) {
@@ -360,53 +353,46 @@ export async function applyRedactionsToDocument(documentId, redactions, user, ip
     effectiveUserId = originalDoc.uploader_id || originalDoc.uploaded_by;
   }
 
-  const values = [
-    newId,
-    originalDoc.case_id,
-    newFilename,
-    newStorageKey,
-    'text/plain',
-    buffer.length,
-    newHash,
-    'VERIFIED_AUTHENTIC',
-    originalDoc.document_type || 'EVIDENCE',
-    originalDoc.document_category || 'INVESTIGATION',
-    originalDoc.classification_confidence || 1.0,
-    newText,
-    JSON.stringify({
-      is_redacted: true,
-      original_filename: originalDoc.filename,
-      redaction_count: redactions.length,
-      redacted_at: new Date().toISOString()
-    }),
-    effectiveUserId,
-    true,
-    documentId
-  ];
-  
-  const res = await query(sql, values);
-  const newDocRecord = res.rows[0];
-
-  // Audit Logs
+  // Audit Log: Record redacted copy generation referencing source evidence
   await logAuditEvent({
     userId: effectiveUserId,
     caseId: originalDoc.case_id,
     documentId: documentId,
     action: 'DOCUMENT_REDACTED',
     ipAddress,
-    metadata: { generated_doc_id: newId, redaction_count: redactions.length }
+    metadata: { 
+      action_type: 'redacted_copy_generated',
+      source_document_id: documentId,
+      source_filename: originalDoc.filename,
+      redacted_filename: newFilename,
+      storage_key: newStorageKey,
+      sha256_hash: newHash,
+      file_size: buffer.length,
+      redaction_count: redactions.length,
+      timestamp: new Date().toISOString()
+    }
   });
 
-  await logAuditEvent({
-    userId: effectiveUserId,
-    caseId: originalDoc.case_id,
-    documentId: newId,
-    action: 'DOCUMENT_UPLOADED',
-    ipAddress,
-    metadata: { source: 'redaction_engine', parent_id: documentId }
-  });
-
-  return newDocRecord;
+  // Return transient redacted artifact metadata without inserting a new evidence row
+  return {
+    id: newId,
+    case_id: originalDoc.case_id,
+    filename: newFilename,
+    storage_key: newStorageKey,
+    mime_type: 'text/plain',
+    file_size: buffer.length,
+    sha256_hash: newHash,
+    status: 'VERIFIED_AUTHENTIC',
+    document_type: originalDoc.document_type || 'EVIDENCE',
+    document_category: originalDoc.document_category || 'INVESTIGATION',
+    extracted_text: newText,
+    is_redacted: true,
+    is_redacted_copy: true,
+    parent_document_id: documentId,
+    original_filename: originalDoc.filename,
+    redaction_count: redactions.length,
+    generated_at: new Date().toISOString()
+  };
 }
 
 export const GLOBAL_EVIDENCE_ROLES = [

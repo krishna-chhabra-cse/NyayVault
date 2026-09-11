@@ -16,8 +16,14 @@ import {
   GitCommit
 } from 'lucide-react';
 import { getGlobalAuditLogs, verifyAuditChain } from '../services/api';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable, { applyPlugin } from 'jspdf-autotable';
+
+try {
+  applyPlugin(jsPDF);
+} catch (e) {
+  // Ignore if already applied
+}
 
 export default function AuditTrailHub() {
   const [logs, setLogs] = useState([]);
@@ -119,7 +125,7 @@ export default function AuditTrailHub() {
         ]);
       });
 
-      doc.autoTable({
+      const tableConfig = {
         head: [tableColumn],
         body: tableRows,
         startY: 44,
@@ -127,7 +133,13 @@ export default function AuditTrailHub() {
         headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
         styles: { fontSize: 7, cellPadding: 2.5 },
         alternateRowStyles: { fillColor: [248, 250, 252] }
-      });
+      };
+
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable(tableConfig);
+      } else {
+        autoTable(doc, tableConfig);
+      }
 
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {

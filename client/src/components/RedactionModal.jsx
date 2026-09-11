@@ -261,10 +261,10 @@ export default function RedactionModal({ doc: docProp, document: documentProp, o
                 </div>
                 <div className="text-xs space-y-1">
                   <div className="font-bold text-sm text-emerald-900 dark:text-emerald-200">
-                    Redacted Evidence File Delivered & Downloaded
+                    Redacted Copy Delivered & Logged to Audit Trail
                   </div>
                   <p className="text-emerald-700 dark:text-emerald-400">
-                    The redacted document has been downloaded to your system. An immutable copy is cryptographically sealed in the evidence vault with its own live SHA-256 fingerprint.
+                    The redacted file has been downloaded to your device. An immutable audit entry has been recorded in the Master Chain of Custody Ledger without cluttering the primary Evidence repository.
                   </p>
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function RedactionModal({ doc: docProp, document: documentProp, o
             <>
               <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                 <ShieldCheck size={15} className="shrink-0 text-emerald-500" />
-                <span>The redacted exhibit is saved in this case and ready for court & public release.</span>
+                <span>The redacted artifact is downloaded and securely logged to the audit ledger.</span>
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <button 
@@ -464,8 +464,8 @@ export default function RedactionModal({ doc: docProp, document: documentProp, o
                   onClick={() => handleFinish(completedDoc)}
                   className="px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer transition-all"
                 >
-                  <ExternalLink size={14} />
-                  <span>View in Evidence Hub</span>
+                  <Check size={14} />
+                  <span>Done</span>
                 </button>
               </div>
             </>

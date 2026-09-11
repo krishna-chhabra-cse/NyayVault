@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileBarChart, Download, Loader2, AlertCircle } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
 import { generateCaseSummary } from '../services/api';
 
 export default function CaseSummary({ caseId, caseDetails }) {

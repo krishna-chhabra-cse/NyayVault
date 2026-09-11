@@ -14,8 +14,14 @@ import {
   Printer
 } from 'lucide-react';
 import { getCases, getCaseDocuments, getCaseAuditTrail } from '../services/api';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable, { applyPlugin } from 'jspdf-autotable';
+
+try {
+  applyPlugin(jsPDF);
+} catch (e) {
+  // Ignore if already applied
+}
 
 export default function ReportsHub({ currentUser }) {
   const [cases, setCases] = useState([]);
@@ -121,7 +127,7 @@ export default function ReportsHub({ currentUser }) {
         ['Custody Integrity Status', 'VERIFIED TAMPER-FREE (AUTHENTIC)']
       ];
 
-      docPdf.autoTable({
+      const bsaTableConfig = {
         startY: 98,
         head: [['Specification', 'Cryptographic & Legal Verification']],
         body: tableData,
@@ -132,7 +138,13 @@ export default function ReportsHub({ currentUser }) {
           0: { fontStyle: 'bold', width: 55 },
           1: { fontStyle: 'normal' }
         }
-      });
+      };
+
+      if (typeof docPdf.autoTable === 'function') {
+        docPdf.autoTable(bsaTableConfig);
+      } else {
+        autoTable(docPdf, bsaTableConfig);
+      }
 
       const finalY = docPdf.lastAutoTable.finalY + 20;
 
@@ -199,17 +211,23 @@ export default function ReportsHub({ currentUser }) {
         new Date(d.uploaded_at).toLocaleDateString('en-IN')
       ]);
 
-      docPdf.autoTable({
+      const docTableConfig = {
         startY: 50,
         head: [['Filename', 'Category', 'Size', 'SHA-256 Hash', 'Date Ingested']],
         body: docRows.length > 0 ? docRows : [['No documents', '-', '-', '-', '-']],
         theme: 'grid',
         headStyles: { fillColor: [30, 41, 59], fontSize: 8 },
         styles: { fontSize: 7, cellPadding: 2.5 }
-      });
+      };
+
+      if (typeof docPdf.autoTable === 'function') {
+        docPdf.autoTable(docTableConfig);
+      } else {
+        autoTable(docPdf, docTableConfig);
+      }
 
       // Section 2: Chain of Custody Summary
-      const nextY = docPdf.lastAutoTable.finalY + 12;
+      const nextY = (docPdf.lastAutoTable?.finalY || 50) + 12;
       docPdf.setFontSize(12);
       docPdf.text('2. Chain of Custody Audit Summary', 14, nextY);
 
@@ -220,14 +238,20 @@ export default function ReportsHub({ currentUser }) {
         l.ip_address || '127.0.0.1'
       ]);
 
-      docPdf.autoTable({
+      const auditTableConfig = {
         startY: nextY + 4,
         head: [['Timestamp', 'Action', 'Officer', 'IP']],
         body: auditRows.length > 0 ? auditRows : [['No audit logs recorded', '-', '-', '-']],
         theme: 'grid',
         headStyles: { fillColor: [15, 23, 42], fontSize: 8 },
         styles: { fontSize: 7, cellPadding: 2.5 }
-      });
+      };
+
+      if (typeof docPdf.autoTable === 'function') {
+        docPdf.autoTable(auditTableConfig);
+      } else {
+        autoTable(docPdf, auditTableConfig);
+      }
 
       docPdf.save(`Dossier_${selectedCase.case_number}.pdf`);
     } catch (e) {
@@ -244,7 +268,7 @@ export default function ReportsHub({ currentUser }) {
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-50 p-1.5 shrink-0 hidden sm:flex items-center justify-center">
             <img 
-              src="/nyayvault-icon.png" 
+              src="/logo.png" 
               alt="NyayVault" 
               className="w-full h-full object-contain" 
             />

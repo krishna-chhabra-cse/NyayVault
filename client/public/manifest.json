@@ -1,5 +1,5 @@
 {
-  "name": "NYAY VAULT - Secure Digital Evidence & Judicial Intelligence System",
+  "name": "NyayVault - Secure Evidence Portal",
   "short_name": "NyayVault",
   "description": "Enterprise-grade, cryptographically immutable, AI-powered digital evidence repository for the Indian Judiciary",
   "start_url": "/",
@@ -8,13 +8,18 @@
   "theme_color": "#0b192e",
   "icons": [
     {
-      "src": "/nyayvault-icon.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
       "src": "/nyayvault-icon.png",
       "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "886x886",
       "type": "image/png"
     }
   ]

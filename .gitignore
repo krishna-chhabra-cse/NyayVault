@@ -31,3 +31,15 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+
+# Archives and Bundles
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Private keys & certificates
+*.pem
+*.key
+*.cert

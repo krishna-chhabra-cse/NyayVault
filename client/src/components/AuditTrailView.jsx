@@ -1,6 +1,12 @@
 import { Activity, Clock, Download, ShieldCheck } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable, { applyPlugin } from 'jspdf-autotable';
+
+try {
+  applyPlugin(jsPDF);
+} catch (e) {
+  // Ignore if already applied
+}
 
 export default function AuditTrailView({ logs, caseNumber = 'UNKNOWN-CASE' }) {
   
@@ -37,7 +43,7 @@ export default function AuditTrailView({ logs, caseNumber = 'UNKNOWN-CASE' }) {
         tableRows.push(rowData);
       });
 
-      doc.autoTable({
+      const tableConfig = {
         head: [tableColumn],
         body: tableRows,
         startY: 48,
@@ -45,7 +51,13 @@ export default function AuditTrailView({ logs, caseNumber = 'UNKNOWN-CASE' }) {
         headStyles: { fillColor: [27, 77, 62] },
         styles: { fontSize: 8, cellPadding: 3 },
         alternateRowStyles: { fillColor: [248, 250, 252] }
-      });
+      };
+
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable(tableConfig);
+      } else {
+        autoTable(doc, tableConfig);
+      }
 
       const pageCount = doc.internal.getNumberOfPages();
       for(let i = 1; i <= pageCount; i++) {

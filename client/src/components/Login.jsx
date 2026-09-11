@@ -432,7 +432,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
 
       {/* Footer copyright */}
       <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium shrink-0 pt-1">
-        NyayVault Digital Evidence System © 2026 · Department of Justice · Ministry of Law & Justice · Government of India
+        NyayVault Secure Evidence Portal © 2026 · Department of Justice · Ministry of Law & Justice · Government of India
       </div>
 
       {/* MeriPehchaan / ePramaan Government SSO Modal */}

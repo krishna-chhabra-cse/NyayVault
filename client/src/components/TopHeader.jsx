@@ -136,7 +136,7 @@ export default function TopHeader({
         <div className="lg:hidden flex items-center mr-2.5 shrink-0">
           <div className="w-9 h-9 rounded-xl overflow-hidden shadow-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-50 p-1 flex items-center justify-center">
             <img 
-              src="/nyayvault-icon.png" 
+              src="/logo.png" 
               alt="NyayVault" 
               className="w-full h-full object-contain" 
             />
