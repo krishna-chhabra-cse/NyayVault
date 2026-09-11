@@ -155,7 +155,7 @@ export async function getDocumentsByCase(caseId, user = null) {
       u.department as uploaded_by_department
     FROM documents d
     LEFT JOIN users u ON d.uploaded_by = u.id
-    WHERE d.case_id = $1
+    WHERE d.case_id = $1 AND d.is_redacted = FALSE AND d.filename NOT LIKE 'REDACTED_%'
   `;
   const params = [caseItem.id];
   if (user && user.role === 'INVESTIGATING_OFFICER') {
@@ -297,7 +297,7 @@ export async function getDocumentsWithText(caseId) {
       u.full_name as uploaded_by_name, u.role as uploaded_by_role
     FROM documents d
     LEFT JOIN users u ON d.uploaded_by = u.id
-    WHERE d.case_id = $1
+    WHERE d.case_id = $1 AND d.is_redacted = FALSE AND d.filename NOT LIKE 'REDACTED_%'
     ORDER BY d.uploaded_at ASC;
   `;
   const res = await query(sql, [caseId]);
@@ -462,7 +462,7 @@ export async function listAllDocuments(user = null) {
     LEFT JOIN cases c ON d.case_id = c.id
   `;
   const params = [];
-  const conditions = [];
+  const conditions = ["d.is_redacted = FALSE AND d.filename NOT LIKE 'REDACTED_%'"];
 
   // Strict Judicial Boundary: Non-custodians only see documents from cases they own or are assigned to
   if (user && !GLOBAL_EVIDENCE_ROLES.includes(user.role)) {
