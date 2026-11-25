@@ -21,10 +21,12 @@ export async function semanticSearch(caseId, queryText, limit = 5) {
   const sql = `
     SELECT 
       c.id as chunk_id,
+      c.id as id,
       c.text_content,
       c.chunk_index,
       d.id as document_id,
       d.filename as document_name,
+      d.filename as filename,
       d.document_type,
       1 - (c.embedding <=> $1) as similarity_score
     FROM document_chunks c

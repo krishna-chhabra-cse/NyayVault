@@ -31,6 +31,15 @@ function chunkText(text, maxLen = 1000) {
   return chunks;
 }
 
+// pdf-parse (bundled pdf.js 1.10) is not safe to run concurrently: two PDFs parsed at the
+// same time intermittently fail with "bad XRef entry". Serialize all PDF parsing.
+let pdfLock = Promise.resolve();
+function parsePdfSerially(buffer) {
+  const run = pdfLock.then(() => pdfParse(buffer));
+  pdfLock = run.catch(() => {});
+  return run;
+}
+
 /**
  * Extracts raw text from a document stream based on its mime type.
  */
@@ -44,7 +53,7 @@ async function extractTextFromStream(stream, mimeType) {
     const buffer = Buffer.concat(chunks);
     
     // Parse PDF
-    const data = await pdfParse(buffer);
+    const data = await parsePdfSerially(buffer);
     return data.text;
   }
   

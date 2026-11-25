@@ -40,7 +40,7 @@ flowchart TD
         EC2 -.-> CW
     end
 
-    EC2 -->|"prompts + context"| AI["External LLM API<br/>(Gemini 2.5 Flash)"]
+    EC2 -->|"prompts + context"| AI["External LLM API<br/>(Gemini 3.5 Flash-Lite)"]
 ```
 
 | AWS service | How NyayVault uses it |
@@ -78,7 +78,7 @@ AWS setup steps (bucket, IAM role, CloudWatch) are in **[docs/AWS_SETUP.md](docs
 | API | Node.js 20, Express, JWT, Multer, PM2 on **AWS EC2** |
 | Object storage | **Amazon S3** via AWS SDK v3 (`@aws-sdk/client-s3`) |
 | Database | PostgreSQL 16 + pgvector (embedded PGlite fallback for local dev) |
-| AI | Gemini 2.5 Flash (Google AI Studio or OpenRouter), Tesseract OCR |
+| AI | Gemini 3.5 Flash-Lite via Google AI Studio (OpenRouter also supported), Tesseract OCR |
 
 ---
 
