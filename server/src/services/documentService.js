@@ -23,10 +23,11 @@ export const GLOBAL_EVIDENCE_ROLES = [
  * @param {Object} params.file - Multer file object
  * @param {Object} params.user - Authenticated user context
  * @param {string} params.ipAddress - Client IP address
+ * @param {string|null} params.transcript - Officer-attached transcript/description for audio/video evidence
  * @param {boolean} params.isMedical - Sensitive medical/forensic record: encrypted with AWS KMS (SSE-KMS) instead of default SSE-S3
  * @returns {Promise<Object>} Created document record
  */
-export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.1', isMedical = false }) {
+export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.1', isMedical = false, transcript = null }) {
   // 1. Verify case exists and obtain canonical case ID
   const caseItem = await getCaseById(caseId);
   const canonicalCaseId = caseItem.id;
@@ -95,9 +96,9 @@ export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.
     const insertDocSql = `
       INSERT INTO documents (
         id, case_id, filename, storage_key, mime_type, file_size, 
-        sha256_hash, status, uploaded_by, uploaded_at, document_category
+        sha256_hash, status, uploaded_by, uploaded_at, document_category, extracted_text
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *;
     `;
 
@@ -112,7 +113,8 @@ export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.
       'uploaded',
       uploaderId,
       now,
-      documentCategory
+      documentCategory,
+      transcript || null
     ]);
 
     const createdDoc = docRes.rows[0];

@@ -110,6 +110,7 @@ router.post('/:caseId/documents', requireRole(['INVESTIGATING_OFFICER', 'FORENSI
       user: req.user,
       ipAddress,
       isMedical: req.body.isMedical === 'true' || req.body.isMedical === true,
+      transcript: typeof req.body.transcript === 'string' ? req.body.transcript.slice(0, 20000) : null,
     });
 
     // Fire and forget email notification

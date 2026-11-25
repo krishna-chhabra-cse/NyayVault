@@ -46,3 +46,7 @@ build/
 
 # OCR language data (auto-downloaded by tesseract.js)
 *.traineddata
+
+# Demo case media (regenerate with demo_case_robbery/build_case.py)
+demo_case_robbery/source/
+demo_case_robbery/out/
