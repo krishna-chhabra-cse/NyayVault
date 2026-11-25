@@ -111,7 +111,7 @@ export default function Sidebar({ activeView, onViewChange, currentUser, mobileO
         })}
       </nav>
 
-      {/* Bottom Legal Watermark / GovTech Card - Always pinned flush to bottom */}
+      {/* Bottom Legal Watermark Card - Always pinned flush to bottom */}
       <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 shrink-0 mt-auto bg-slate-50/50 dark:bg-slate-900/50">
         <div className="p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-2xs">
           <div className="flex items-center gap-2.5">
@@ -124,7 +124,7 @@ export default function Sidebar({ activeView, onViewChange, currentUser, mobileO
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="text-[9px] text-slate-400 font-mono tracking-wider truncate">SIH-26190 GovTech</span>
+                <span className="text-[9px] text-slate-400 font-mono tracking-wider truncate">Powered by AWS</span>
               </div>
             </div>
           </div>

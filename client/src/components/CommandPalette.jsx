@@ -99,12 +99,12 @@ export default function CommandPalette({
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ badge_number: badgeNumber, password: 'sih2026' })
+        body: JSON.stringify({ badge_number: badgeNumber, password: 'nyay2026' })
       });
       const data = await res.json();
       if (data.token && data.user) {
-        localStorage.setItem('sih_token', data.token);
-        localStorage.setItem('sih_active_user', JSON.stringify(data.user));
+        localStorage.setItem('nv_token', data.token);
+        localStorage.setItem('nv_active_user', JSON.stringify(data.user));
         toast.success(`Switched identity to ${data.user.full_name} (${badgeNumber})`, 'Role Switched');
         onClose();
         if (onSwitchUser) {

@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: ./server
-    container_name: sih26190_backend
+    container_name: nyayvault_backend
     restart: unless-stopped
     env_file:
       - path: ./server/.env
@@ -11,13 +11,13 @@ services:
       PORT: 5000
       NODE_ENV: development
       CORS_ORIGIN: http://localhost:5173
-      DATABASE_URL: postgresql://sih_admin:sih_secure_password_2026@postgres:5432/sih26190_evidence_db
+      DATABASE_URL: postgresql://nyayvault:${POSTGRES_PASSWORD:-change_me_local_only}@postgres:5432/nyayvault_db
       AWS_S3_ENDPOINT: http://minio:9000
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadminpassword
-      AWS_S3_BUCKET_NAME: sih26190-evidence
-      JWT_SECRET: sih_local_docker_secret_change_me
+      AWS_S3_BUCKET_NAME: nyayvault-evidence
+      JWT_SECRET: nyayvault_local_docker_secret_change_me
       MAX_FILE_SIZE_BYTES: 524288000
     ports:
       - "5001:5000"
@@ -34,7 +34,7 @@ services:
       context: ./client
       args:
         VITE_API_TARGET: http://backend:5000
-    container_name: sih26190_frontend
+    container_name: nyayvault_frontend
     restart: unless-stopped
     environment:
       VITE_API_TARGET: http://backend:5000
@@ -47,19 +47,19 @@ services:
   # PostgreSQL Database Service
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: sih26190_postgres
+    container_name: nyayvault_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: sih_admin
-      POSTGRES_PASSWORD: sih_secure_password_2026
-      POSTGRES_DB: sih26190_evidence_db
+      POSTGRES_USER: nyayvault
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_local_only}
+      POSTGRES_DB: nyayvault_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./server/src/db/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sih_admin -d sih26190_evidence_db"]
+      test: ["CMD-SHELL", "pg_isready -U nyayvault -d nyayvault_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -67,7 +67,7 @@ services:
   # MinIO S3-Compatible Object Storage Service
   minio:
     image: minio/minio:latest
-    container_name: sih26190_minio
+    container_name: nyayvault_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -87,16 +87,16 @@ services:
   # MinIO Bucket Auto-Creation Service
   create-bucket:
     image: minio/mc:latest
-    container_name: sih26190_minio_init
+    container_name: nyayvault_minio_init
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadminpassword;
-      /usr/bin/mc mb --ignore-existing myminio/sih26190-evidence;
-      /usr/bin/mc anonymous set none myminio/sih26190-evidence;
-      echo 'Bucket sih26190-evidence initialized successfully';
+      /usr/bin/mc mb --ignore-existing myminio/nyayvault-evidence;
+      /usr/bin/mc anonymous set none myminio/nyayvault-evidence;
+      echo 'Bucket nyayvault-evidence initialized successfully';
       exit 0;
       "
 

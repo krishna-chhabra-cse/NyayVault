@@ -10,12 +10,18 @@ export async function createCase({
   title,
   description = '',
   securityLevel = 'RESTRICTED',
-  createdBy = 'usr-pol-042',
+  createdBy,
   ipAddress = '127.0.0.1',
 }) {
   if (!caseNumber || !title) {
     const error = new Error('Case Number and Title are required.');
     error.statusCode = 400;
+    throw error;
+  }
+
+  if (!createdBy) {
+    const error = new Error('Authenticated user ID (createdBy) is required to create a case.');
+    error.statusCode = 401;
     throw error;
   }
 
@@ -252,7 +258,7 @@ export async function assignCaseActors({
 
   // Record Audit Event
   await logAuditEvent({
-    userId: allocatedBy || 'usr-reg-001',
+    userId: allocatedBy,
     caseId: caseItem.id,
     action: 'CASE_BENCH_ALLOCATED',
     ipAddress,

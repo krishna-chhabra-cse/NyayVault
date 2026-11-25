@@ -1,8 +1,29 @@
 import express from 'express';
 import crypto from 'crypto';
 import { query } from '../config/db.js';
+import { authenticateUser } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * Maintenance endpoints (migrate, seed, user creation, cleanup) are restricted to:
+ *  - requests from the EC2 host itself (e.g. `curl localhost:5000/...` over SSH), or
+ *  - requests carrying the x-admin-key header matching ADMIN_API_KEY.
+ */
+function requireAdmin(req, res, next) {
+  const remote = req.socket?.remoteAddress || '';
+  const isLoopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
+  const adminKey = process.env.ADMIN_API_KEY;
+  const keyOk = adminKey && req.headers['x-admin-key'] === adminKey;
+  if (isLoopback || keyOk) return next();
+  return res.status(403).json({ error: 'Maintenance endpoint: admin access required.' });
+}
+
+// Integrity demo (tamper/restore) requires a logged-in user; everything else requires admin.
+router.use((req, res, next) => {
+  if (/^\/(tamper|restore)\//.test(req.path)) return authenticateUser(req, res, next);
+  return requireAdmin(req, res, next);
+});
 router.get('/migrate', async (req, res) => {
   try {
     await query('ALTER TABLE documents ADD COLUMN IF NOT EXISTS is_redacted BOOLEAN DEFAULT FALSE;');
@@ -26,6 +47,28 @@ router.post('/user', async (req, res) => {
       [userId, badge_number, full_name, role, department]
     );
     res.json({ success: true, message: `User ${badge_number} created successfully!`, userId });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/seed-demo', async (req, res) => {
+  try {
+    const caseId = `case-${Date.now()}`;
+    await query(`
+      INSERT INTO cases (id, case_number, title, description, status, security_level, created_by, created_at)
+      VALUES ($1, 'FIR-2026-9044', 'Cyber Fraud and Data Breach Investigation', 'Investigation into unauthorized access and data exfiltration from primary servers.', 'INVESTIGATION', 'High', 'usr-pol-001', CURRENT_TIMESTAMP)
+    `, [caseId]);
+    
+    // Assign POL-1 and JUD-1
+    await query(`
+      INSERT INTO case_assignments (case_id, user_id, assigned_role, assigned_at)
+      VALUES 
+      ($1, 'usr-pol-001', 'LEAD_INVESTIGATOR', CURRENT_TIMESTAMP),
+      ($1, 'usr-jud-001', 'PRESIDING_JUDGE', CURRENT_TIMESTAMP)
+    `, [caseId]);
+
+    res.json({ success: true, message: 'Demo case seeded successfully!', caseId });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -59,7 +102,7 @@ const tamperBackupMap = new Map();
 
 /**
  * POST /api/dev/tamper/:documentId
- * Live Hackathon Presentation Tool: Intentionally modifies 1 byte in storage blob
+ * Integrity demo tool: Intentionally modifies 1 byte in storage blob
  * to demonstrate live red TAMPER_DETECTED warning badge in UI.
  */
 router.post('/tamper/:documentId', async (req, res) => {

@@ -90,11 +90,11 @@ export default function AuditTrailHub() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
       doc.setTextColor(15, 23, 42);
-      doc.text('GOVERNMENT OF INDIA', 105, 18, { align: 'center' });
+      doc.text('NYAYVAULT • CLOUD EVIDENCE VAULT', 105, 18, { align: 'center' });
       
       doc.setFontSize(13);
       doc.setTextColor(51, 65, 85);
-      doc.text('MINISTRY OF LAW & JUSTICE - NYAYVAULT', 105, 25, { align: 'center' });
+      doc.text('CHAIN OF CUSTODY AUDIT REPORT', 105, 25, { align: 'center' });
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');

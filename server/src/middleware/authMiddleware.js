@@ -1,15 +1,27 @@
 import jwt from 'jsonwebtoken';
-import { query } from '../config/db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sih-prototype-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start in production without a secure secret.');
+  process.exit(1);
+}
+
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'nyayvault-dev-only-insecure-secret';
+
+if (!JWT_SECRET) {
+  console.warn('[SECURITY WARNING] JWT_SECRET is not set. Using insecure development fallback. Set JWT_SECRET in .env for production.');
+}
 
 /**
  * Validates JWT token from the Authorization header.
- * For Phase 5, we enforce strict JWT.
+ * Uses req.originalUrl for bypass checks to correctly handle middleware mounting context.
  */
 export async function authenticateUser(req, res, next) {
-  // Allow healthcheck and login to bypass auth
-  if (req.path === '/api/health' || req.path === '/api/auth/login' || req.path === '/api/auth/users') {
+  const originalUrl = req.originalUrl || '';
+
+  // Allow healthcheck to bypass auth (public endpoint)
+  if (originalUrl === '/api/health') {
     return next();
   }
 
@@ -20,26 +32,17 @@ export async function authenticateUser(req, res, next) {
     return res.status(401).json({ error: 'Authentication required. No token provided.' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, userPayload) => {
+  jwt.verify(token, EFFECTIVE_JWT_SECRET, (err, userPayload) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token.' });
     }
-    
+
     // Inject user info into request
     req.user = userPayload;
-    
+
     // Fallback for older endpoints that rely on x-user-id header
     req.headers['x-user-id'] = userPayload.id;
-    
+
     next();
   });
-}
-
-export function requireRole(roles) {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Access denied. Insufficient role permissions.' });
-    }
-    next();
-  };
 }

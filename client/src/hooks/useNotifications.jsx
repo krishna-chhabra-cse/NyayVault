@@ -7,12 +7,12 @@ const NotificationContext = createContext();
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState(() => {
     try {
-      const saved = localStorage.getItem('sih_notifications');
+      const saved = localStorage.getItem('nv_notifications');
       if (saved) {
         const parsed = JSON.parse(saved);
         const hasMockData = Array.isArray(parsed) && parsed.some(n => n.id?.startsWith('notif-') && (n.caseId === 'CR-2026-0045' || n.caseId === 'CR-2026-0001'));
         if (hasMockData) {
-          localStorage.removeItem('sih_notifications');
+          localStorage.removeItem('nv_notifications');
           return [];
         }
         return parsed;
@@ -25,7 +25,7 @@ export const NotificationProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem('sih_notifications', JSON.stringify(notifications));
+      localStorage.setItem('nv_notifications', JSON.stringify(notifications));
     } catch (e) {
       console.error('Failed to save notifications', e);
     }

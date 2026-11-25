@@ -6,7 +6,7 @@ const translations = {
     'NyayVault': 'NyayVault',
     'Secure Evidence Portal': 'Secure Evidence Portal',
     'Towards Data-Driven Justice': 'Towards Data-Driven Justice',
-    'Ministry of Justice • Secure Evidence Portal': 'Ministry of Justice • Secure Evidence Portal',
+    'Secure Cloud Evidence Portal': 'Secure Cloud Evidence Portal',
     'Active Investigations & Evidence Vault': 'Active Investigations & Evidence Vault',
     'Welcome back,': 'Welcome back,',
     'Here is your live evidence custody summary and active proceedings overview.': 'Here is your live evidence custody summary and active proceedings overview.',
@@ -145,7 +145,7 @@ const translations = {
     'NyayVault': 'न्यायवॉल्ट',
     'Secure Evidence Portal': 'सुरक्षित साक्ष्य पोर्टल',
     'Towards Data-Driven Justice': 'डेटा-आधारित न्याय की ओर',
-    'Ministry of Justice • Secure Evidence Portal': 'न्याय मंत्रालय • सुरक्षित साक्ष्य पोर्टल',
+    'Secure Cloud Evidence Portal': 'सुरक्षित क्लाउड साक्ष्य पोर्टल',
     'Active Investigations & Evidence Vault': 'सक्रिय जांच एवं साक्ष्य वॉल्ट',
     'Welcome back,': 'स्वागत है,',
     'Here is your live evidence custody summary and active proceedings overview.': 'यहाँ आपका लाइव साक्ष्य कस्टडी सारांश और सक्रिय कार्यवाही का अवलोकन है।',
@@ -285,11 +285,11 @@ const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('sih_language') || 'en';
+    return localStorage.getItem('nv_language') || 'en';
   });
 
   useEffect(() => {
-    localStorage.setItem('sih_language', language);
+    localStorage.setItem('nv_language', language);
   }, [language]);
 
   const toggleLanguage = () => {

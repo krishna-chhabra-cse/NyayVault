@@ -1,5 +1,5 @@
--- Schema for SIH26190: Secure Digital Document Management System
--- Database: sih26190_evidence_db
+-- Schema for NyayVault: Cloud-Native Digital Evidence Vault
+-- Database: PostgreSQL + pgvector (self-managed on AWS EC2)
 
 -- Enable pgvector extension for semantic search
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(64) PRIMARY KEY,
     badge_number VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL DEFAULT '$2b$10$f8VERr328ja8qQly0fuVsuLeCCToaD8.V6wBIhx.QLkfQGWgg.jES',
+    password_hash VARCHAR(255) NOT NULL DEFAULT '$2b$10$osOkaD8YSsEe660f4WbXGuxX7i8Lk.u4BooqfX7wzKd5npyOhBjSu',
     email VARCHAR(255),
     full_name VARCHAR(120) NOT NULL,
     role VARCHAR(50) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255) NOT NULL DEFAULT '$2b$10$f8VERr328ja8qQly0fuVsuLeCCToaD8.V6wBIhx.QLkfQGWgg.jES';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255) NOT NULL DEFAULT '$2b$10$osOkaD8YSsEe660f4WbXGuxX7i8Lk.u4BooqfX7wzKd5npyOhBjSu';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255);
 
 -- 2. Cases Table
@@ -147,3 +147,7 @@ VALUES
     ('usr-1787866796708', 'REG-1', 'Registrar Amit Kumar', 'REGISTRAR', 'Faridabad Court Registry')
 ON CONFLICT (id) DO NOTHING;
 
+
+-- Rotate legacy demo password hash to the current demo password (idempotent)
+UPDATE users SET password_hash = '$2b$10$osOkaD8YSsEe660f4WbXGuxX7i8Lk.u4BooqfX7wzKd5npyOhBjSu'
+WHERE password_hash = '$2b$10$f8VERr328ja8qQly0fuVsuLeCCToaD8.V6wBIhx.QLkfQGWgg.jES';

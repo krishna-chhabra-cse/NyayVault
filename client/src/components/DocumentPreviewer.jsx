@@ -36,7 +36,8 @@ export default function DocumentPreviewer({
   documentId: propDocId, 
   filename: propFilename = '', 
   documentType = 'EVIDENCE',
-  document = null 
+  document = null,
+  searchQuery = ''
 }) {
   const documentId = propDocId || document?.id;
   const filename = propFilename || document?.filename || '';
@@ -312,7 +313,7 @@ export default function DocumentPreviewer({
                 type="button"
                 onClick={handleSimulateTamper}
                 className="whitespace-nowrap shrink-0 px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 text-[10px] font-black flex items-center gap-1 cursor-pointer"
-                title="Hackathon Live Demo: Mutate 1 byte in storage to test alert"
+                title="Integrity demo: mutate 1 byte of the stored S3 object to trigger the tamper alert"
               >
                 <Flame size={12} />
                 <span>Simulate</span>
@@ -410,7 +411,7 @@ export default function DocumentPreviewer({
         {isPdf && (
           <div className="w-full h-full min-h-[500px] rounded-xl overflow-hidden shadow-inner border border-slate-200 dark:border-slate-800 bg-white">
             <iframe 
-              src={`${fileData?.objectUrl}#toolbar=1&navpanes=0`} 
+              src={`${fileData?.objectUrl}#toolbar=1&navpanes=0${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''}`} 
               className="w-full h-full min-h-[500px]"
               title={`Evidence Exhibit: ${filename}`}
             />

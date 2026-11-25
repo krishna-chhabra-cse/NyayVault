@@ -99,7 +99,7 @@ NyayVault enforces strict cryptographic and legal boundaries so stakeholders onl
 +------------------------------------v------------------------------------+
 |                         APPLICATION LAYER (BACKEND)                     |
 |  Node.js + Express REST API | RBAC Middleware | Helmet / CORS Security  |
-|  Crypto SHA-256 Engine | Audit Service | PM2 on AWS EC2 (3.82.17.79)    |
+|  Crypto SHA-256 Engine | Audit Service | PM2 on AWS EC2 (<EC2_PUBLIC_IP>)|
 +-------------------+--------------------------------+--------------------+
                     |                                |
 +-------------------v---------------+  +-------------v--------------------+

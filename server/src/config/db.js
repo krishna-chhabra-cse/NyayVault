@@ -24,9 +24,13 @@ export async function initDatabase() {
   const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
   // Try PostgreSQL connection
-  const connectionString = process.env.DATABASE_URL || 'postgresql://sih_admin:sih_secure_password_2026@localhost:5432/sih26190_evidence_db';
-  
+  // No hardcoded credentials: without DATABASE_URL we go straight to embedded PGlite.
+  const connectionString = process.env.DATABASE_URL;
+
   try {
+    if (!connectionString) {
+      throw new Error('DATABASE_URL is not set');
+    }
     const testPool = new Pool({
       connectionString,
       connectionTimeoutMillis: 2000,
@@ -48,7 +52,14 @@ export async function initDatabase() {
 
   // Fallback to embedded PGlite engine
   try {
-    const dataDir = path.resolve(__dirname, '../../../data/pglite');
+    let dataDir = path.resolve(__dirname, '../../../data/pglite');
+    
+    // Fix Windows path issues for PGlite by converting to file URI
+    let pgliteDataUri = dataDir;
+    if (process.platform === 'win32') {
+      pgliteDataUri = 'file://' + dataDir.replace(/\\/g, '/');
+    }
+
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
@@ -70,13 +81,13 @@ export async function initDatabase() {
     try {
       try {
         const { vector } = await import('@electric-sql/pglite/vector');
-        pgliteInstance = new PGlite({ dataDir, extensions: { vector } });
+        pgliteInstance = new PGlite(pgliteDataUri, { extensions: { vector } });
         await pgliteInstance.query('SELECT 1');
         hasVector = true;
       } catch (extErr) {
         console.warn('PGlite vector extension unavailable, using standard PGlite engine:', extErr.message);
         cleanLocks();
-        pgliteInstance = new PGlite({ dataDir });
+        pgliteInstance = new PGlite(pgliteDataUri);
         await pgliteInstance.query('SELECT 1');
       }
     } catch (pglErr) {
@@ -94,7 +105,9 @@ export async function initDatabase() {
     }
     await pgliteInstance.exec(executableSchemaSql);
 
-    // Auto-apply non-breaking column migrations
+    // Auto-apply non-breaking column migrations.
+    // WARNING: This is a dev-only pattern. In production, use a dedicated migration
+    // tool (e.g., node-pg-migrate, Flyway) and never run DDL statements at app startup.
     await pgliteInstance.exec(`
       ALTER TABLE documents ADD COLUMN IF NOT EXISTS is_redacted BOOLEAN DEFAULT FALSE;
       ALTER TABLE documents ADD COLUMN IF NOT EXISTS parent_document_id VARCHAR(64) REFERENCES documents(id);

@@ -13,6 +13,7 @@ export const ALLOWED_MIME_TYPES = new Set([
   'image/png',
   'image/tiff',
   'image/webp',
+  'image/gif',
   // Media / CCTV / Audio recordings
   'video/mp4',
   'video/quicktime',
@@ -32,6 +33,7 @@ export const ALLOWED_EXTENSIONS = new Set([
   '.tif',
   '.tiff',
   '.webp',
+  '.gif',
   '.mp4',
   '.mov',
   '.mp3',

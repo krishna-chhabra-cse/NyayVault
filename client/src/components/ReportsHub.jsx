@@ -85,7 +85,7 @@ export default function ReportsHub({ currentUser }) {
       docPdf.setFont('helvetica', 'bold');
       docPdf.setFontSize(14);
       docPdf.setTextColor(15, 23, 42);
-      docPdf.text('GOVERNMENT OF INDIA • MINISTRY OF LAW & JUSTICE', 105, 18, { align: 'center' });
+      docPdf.text('NYAYVAULT • CLOUD EVIDENCE VAULT ON AWS', 105, 18, { align: 'center' });
       
       docPdf.setFontSize(16);
       docPdf.setTextColor(21, 128, 61); // emerald-700

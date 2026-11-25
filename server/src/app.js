@@ -52,7 +52,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    service: 'SIH26190 Secure Digital Document Management API',
+    service: 'NyayVault Cloud Evidence Vault API',
     version: '1.0.0 (Phase 1)',
     database: getDbStatus(),
     storage: getStorageStatus(),

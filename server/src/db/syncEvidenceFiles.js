@@ -199,7 +199,7 @@ Take notice that the trial for the above-captioned matter has been scheduled as 
 3. Defense Witness (DW) Examination: 10-10-2026
 4. Final Arguments: 25-10-2026
 
-All evidence files, including the Charge Sheet and Cyber Forensics Reports, have been securely cataloged in the SIH Evidence Vault. Counsel are directed to ensure all digital exhibits are verified for integrity hashes prior to the Framing of Charges.
+All evidence files, including the Charge Sheet and Cyber Forensics Reports, have been securely cataloged in the NyayVault Evidence Vault. Counsel are directed to ensure all digital exhibits are verified for integrity hashes prior to the Framing of Charges.
 
 By Order of the Court,
 Registrar Amit Kumar (REG-1)
@@ -237,7 +237,7 @@ async function syncEvidence() {
   const docs = await query('SELECT id, filename, storage_key, extracted_text FROM documents');
   console.log(`Found ${docs.rows.length} documents in database.`);
 
-  const buckets = ['sih-evidence-vault-2026', 'sih26190-evidence'];
+  const buckets = [process.env.AWS_S3_BUCKET_NAME || 'nyayvault-evidence', 'sih-evidence-vault-2026', 'sih26190-evidence'];
 
   for (const doc of docs.rows) {
     const textContent = EVIDENCE_TEXTS[doc.filename] || doc.extracted_text || `Document content for ${doc.filename}`;

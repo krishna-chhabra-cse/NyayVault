@@ -74,8 +74,9 @@ async function extractTextFromStream(stream, mimeType) {
 
   if (mimeType.startsWith('video/') || mimeType.startsWith('audio/')) {
     console.log(`[Worker] Detected Audio/Video stream. Initiating multi-modal analysis demo...`);
-    // Read stream to discard it (so MinIO doesn't hang)
-    for await (const chunk of stream) {}
+    // Drain the stream so that MinIO/S3 connection is properly released
+    stream.resume();
+    await new Promise(resolve => stream.on('end', resolve).on('error', resolve));
     
     // Simulate processing time for demo realism
     await new Promise(resolve => setTimeout(resolve, 3000));
@@ -132,10 +133,10 @@ async function processDocument(doc) {
       console.log(`[Worker] Generating vector embeddings for ${doc.id}...`);
       const textChunks = chunkText(extractedText);
       for (let i = 0; i < textChunks.length; i++) {
-        const chunkText = textChunks[i];
-        if (chunkText.length < 10) continue; // Skip tiny chunks
+        const chunkContent = textChunks[i];  // renamed from chunkText to avoid shadowing the chunkText() function
+        if (chunkContent.length < 10) continue; // Skip tiny chunks
         
-        const embedding = await generateEmbedding(chunkText);
+        const embedding = await generateEmbedding(chunkContent);
         
         // Convert embedding array to Postgres vector string: '[0.1, 0.2, ...]'
         const vectorStr = `[${embedding.join(',')}]`;
@@ -144,7 +145,7 @@ async function processDocument(doc) {
         await query(`
           INSERT INTO document_chunks (id, document_id, case_id, chunk_index, text_content, embedding)
           VALUES ($1, $2, $3, $4, $5, $6)
-        `, [chunkId, doc.id, doc.case_id, i, chunkText, vectorStr]);
+        `, [chunkId, doc.id, doc.case_id, i, chunkContent, vectorStr]);
       }
       console.log(`[Worker] Saved ${textChunks.length} vector chunks for ${doc.id}`);
 

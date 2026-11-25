@@ -5,7 +5,7 @@ import { query } from '../config/db.js';
 import { authenticateUser } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'sih-prototype-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'nyayvault-dev-only-insecure-secret';
 
 // Login route
 router.post('/login', async (req, res) => {
