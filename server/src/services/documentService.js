@@ -7,16 +7,26 @@ import { validateEvidenceFile, sanitizeFilename } from '../utils/validator.js';
 import { logAuditEvent, AuditActions } from './auditService.js';
 import { getCaseById } from './caseService.js';
 
+export const GLOBAL_EVIDENCE_ROLES = [
+  'REGISTRAR',
+  'COURT_REGISTRAR',
+  'FORENSIC_EXAMINER',
+  'FORENSIC',
+  'CUSTODIAN',
+  'ADMIN'
+];
+
 /**
- * Uploads, cryptographically hashes, stores in MinIO, and records a document in PostgreSQL.
+ * Uploads, cryptographically hashes, stores in Amazon S3, and records a document in PostgreSQL.
  * @param {Object} params
  * @param {string} params.caseId - Target case ID
  * @param {Object} params.file - Multer file object
  * @param {Object} params.user - Authenticated user context
  * @param {string} params.ipAddress - Client IP address
+ * @param {boolean} params.isMedical - Sensitive medical/forensic record: encrypted with AWS KMS (SSE-KMS) instead of default SSE-S3
  * @returns {Promise<Object>} Created document record
  */
-export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.1' }) {
+export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.1', isMedical = false }) {
   // 1. Verify case exists and obtain canonical case ID
   const caseItem = await getCaseById(caseId);
   const canonicalCaseId = caseItem.id;
@@ -39,7 +49,13 @@ export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.
   const fileSize = file.size || file.buffer.length;
   const mimeType = file.mimetype || 'application/octet-stream';
   const now = new Date().toISOString();
-  const uploaderId = user?.id || 'usr-pol-042';
+  const uploaderId = user?.id;
+
+  if (!uploaderId) {
+    const error = new Error('Authenticated user ID is required to upload documents.');
+    error.statusCode = 401;
+    throw error;
+  }
 
   // Auto-assign document category based on uploader role
   const ROLE_TO_CATEGORY = {
@@ -52,17 +68,23 @@ export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.
   };
   const documentCategory = ROLE_TO_CATEGORY[user?.role] || 'GENERAL';
 
-  // 5. Store file in MinIO Object Storage
-  let uploadSuccess = false;
+  // 5. Store file in Amazon S3 (sensitive records get SSE-KMS encryption)
+  let uploadedToS3 = false;
+  const finalStorageKey = storageKey;
+
   try {
+    if (isMedical) {
+      console.log(`[DPDPA] Storing sensitive evidence (${cleanFilename}) in S3 with AWS KMS encryption...`);
+    }
     await uploadObject({
       key: storageKey,
       buffer: file.buffer,
       contentType: mimeType,
+      sensitive: isMedical,
     });
-    uploadSuccess = true;
+    uploadedToS3 = true;
   } catch (storageErr) {
-    console.error('Failed to upload file to MinIO:', storageErr);
+    console.error('Failed to upload file:', storageErr);
     const error = new Error(`Object storage error: ${storageErr.message}`);
     error.statusCode = 500;
     throw error;
@@ -83,7 +105,7 @@ export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.
       documentId,
       canonicalCaseId,
       cleanFilename,
-      storageKey,
+      finalStorageKey,
       mimeType,
       fileSize,
       sha256Hash,
@@ -107,16 +129,18 @@ export async function uploadDocument({ caseId, file, user, ipAddress = '127.0.0.
         fileSize,
         mimeType,
         sha256Hash,
-        storageKey,
+        storageKey: finalStorageKey,
       },
     });
 
     return createdDoc;
   } catch (dbErr) {
-    // Rollback: Clean up uploaded object in MinIO to avoid orphaned evidence
-    if (uploadSuccess) {
-      console.warn(`Database insert failed. Rolling back MinIO object at ${storageKey}...`);
-      await deleteObject({ key: storageKey });
+    // Rollback: Clean up uploaded object to avoid orphaned evidence
+    if (uploadedToS3) {
+      console.warn(`Database insert failed. Rolling back S3 object at ${storageKey}...`);
+      await deleteObject({ key: storageKey }).catch(e =>
+        console.error('Rollback of S3 object failed:', e.message)
+      );
     }
     console.error('Failed to create database document record:', dbErr);
     const error = new Error(`Database error: ${dbErr.message}`);
@@ -161,7 +185,7 @@ export async function getDocumentsByCase(caseId, user = null) {
   if (user && user.role === 'INVESTIGATING_OFFICER') {
     sql += ` AND d.document_category = 'INVESTIGATION'`;
   }
-  
+
   sql += ` ORDER BY d.uploaded_at DESC;`;
 
   const res = await query(sql, params);
@@ -213,12 +237,12 @@ export async function getDocumentById(documentId) {
 }
 
 /**
- * Verifies the live cryptographic integrity of a document against MinIO bytes.
+ * Verifies the live cryptographic integrity of a document against the stored S3 object.
  */
 export async function verifyDocumentIntegrity(documentId, user, ipAddress = '127.0.0.1') {
   const doc = await getDocumentById(documentId);
 
-  // Read object stream from MinIO
+  // Read object stream from S3
   const { stream } = await getObjectStream({ key: doc.storage_key });
 
   // Calculate live SHA-256 checksum from storage stream
@@ -267,7 +291,7 @@ export async function downloadDocument(documentId, user, ipAddress = '127.0.0.1'
 
   // Log download action in chain of custody
   await logAuditEvent({
-    userId: user?.id || 'usr-pol-042',
+    userId: user?.id,
     caseId: doc.case_id,
     documentId: doc.id,
     action: AuditActions.DOCUMENT_DOWNLOADED,
@@ -288,6 +312,9 @@ export async function downloadDocument(documentId, user, ipAddress = '127.0.0.1'
   };
 }
 
+/**
+ * Retrieves documents with extracted text for AI analysis (summaries, contradictions).
+ */
 export async function getDocumentsWithText(caseId) {
   await getCaseById(caseId);
   const sql = `
@@ -304,18 +331,14 @@ export async function getDocumentsWithText(caseId) {
   return res.rows;
 }
 
-export default {
-  uploadDocument,
-  getDocumentsByCase,
-  getDocumentById,
-  verifyDocumentIntegrity,
-  downloadDocument,
-  getDocumentsWithText,
-};
+/**
+ * Applies text-level redactions to a document's extracted text and produces
+ * a new redacted artifact stored in object storage.
+ */
 export async function applyRedactionsToDocument(documentId, redactions, user, ipAddress = '127.0.0.1') {
   // Fetch original
   const originalDoc = await getDocumentById(documentId);
-  if (!originalDoc.extracted_text) throw new Error("No text to redact.");
+  if (!originalDoc.extracted_text) throw new Error('No text to redact.');
 
   // Apply redactions
   let newText = originalDoc.extracted_text;
@@ -329,7 +352,7 @@ export async function applyRedactionsToDocument(documentId, redactions, user, ip
 
   // Create new text file buffer
   const buffer = Buffer.from(newText, 'utf-8');
-  
+
   // Calculate SHA-256 hash using tested utility
   const newHash = calculateBufferHash(buffer);
 
@@ -339,7 +362,7 @@ export async function applyRedactionsToDocument(documentId, redactions, user, ip
   const newFilename = `REDACTED_${baseName}.txt`;
   const newStorageKey = `cases/${originalDoc.case_id}/documents/${newId}/${newFilename}`;
 
-  // Upload to MinIO / Local storage
+  // Upload to S3 (or local fallback)
   await uploadObject({ key: newStorageKey, buffer, contentType: 'text/plain' });
 
   // Verify user exists or fallback to original uploader to satisfy foreign key constraint
@@ -360,7 +383,7 @@ export async function applyRedactionsToDocument(documentId, redactions, user, ip
     documentId: documentId,
     action: 'DOCUMENT_REDACTED',
     ipAddress,
-    metadata: { 
+    metadata: {
       action_type: 'redacted_copy_generated',
       source_document_id: documentId,
       source_filename: originalDoc.filename,
@@ -394,15 +417,6 @@ export async function applyRedactionsToDocument(documentId, redactions, user, ip
     generated_at: new Date().toISOString()
   };
 }
-
-export const GLOBAL_EVIDENCE_ROLES = [
-  'REGISTRAR', 
-  'COURT_REGISTRAR', 
-  'FORENSIC_EXAMINER', 
-  'FORENSIC', 
-  'CUSTODIAN', 
-  'ADMIN'
-];
 
 /**
  * Validates whether a user is authorized to inspect, download, or verify a document.
@@ -480,3 +494,15 @@ export async function listAllDocuments(user = null) {
   return res.rows;
 }
 
+export default {
+  uploadDocument,
+  getDocumentsByCase,
+  getDocumentById,
+  verifyDocumentIntegrity,
+  downloadDocument,
+  getDocumentsWithText,
+  applyRedactionsToDocument,
+  checkDocumentAccess,
+  listAllDocuments,
+  GLOBAL_EVIDENCE_ROLES,
+};

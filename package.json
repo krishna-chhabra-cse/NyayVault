@@ -1,7 +1,7 @@
 {
-  "name": "sih26190-secure-doc-mgmt",
+  "name": "nyayvault",
   "version": "1.0.0",
-  "description": "Secure Digital Document Management System for Legal and Investigation Documents (SIH26190)",
+  "description": "NyayVault: cloud-native digital evidence vault on AWS (EC2 + S3)",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
@@ -12,13 +12,13 @@
   },
   "keywords": [
     "evidence-management",
-    "sih26190",
-    "legal-docs",
+    "aws",
+    "ec2",
+    "s3",
     "chain-of-custody",
-    "minio",
     "sha256"
   ],
-  "author": "SIH Team",
+  "author": "NyayVault Team",
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^10.0.5"

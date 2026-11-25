@@ -61,7 +61,7 @@ export default function RedactionModal({ doc: docProp, document: documentProp, o
     // Fallback: fetch directly from API
     fetch(`/api/documents/${d.id}/download`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('sih_token')}`
+        'Authorization': `Bearer ${localStorage.getItem('nv_token')}`
       }
     })
       .then(res => res.blob())
@@ -101,8 +101,8 @@ export default function RedactionModal({ doc: docProp, document: documentProp, o
         const res = await fetch(`/api/documents/${doc.id}/redact/suggest`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('sih_token')}`,
-            'x-user-id': localStorage.getItem('sih_active_user')
+            'Authorization': `Bearer ${localStorage.getItem('nv_token')}`,
+            'x-user-id': localStorage.getItem('nv_active_user')
           }
         });
         const data = await res.json();
@@ -173,8 +173,8 @@ export default function RedactionModal({ doc: docProp, document: documentProp, o
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('sih_token')}`,
-          'x-user-id': localStorage.getItem('sih_active_user')
+          'Authorization': `Bearer ${localStorage.getItem('nv_token')}`,
+          'x-user-id': localStorage.getItem('nv_active_user')
         },
         body: JSON.stringify({ redactions: selectedRedactions })
       });

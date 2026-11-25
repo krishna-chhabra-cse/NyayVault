@@ -44,7 +44,7 @@ export default function SettingsHub({ currentUser, theme, toggleTheme }) {
         <div>
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
             <Settings size={16} />
-            <span>GovTech Node Diagnostics & Vault Controls</span>
+            <span>Cloud Node Diagnostics & Vault Controls</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             System & Security Controls
@@ -101,7 +101,7 @@ export default function SettingsHub({ currentUser, theme, toggleTheme }) {
             <div className="flex items-center justify-between">
               <span>Target Evidence Bucket:</span>
               <span className="font-mono text-slate-900 dark:text-white font-semibold">
-                {healthData?.storage?.bucket || 'sih-evidence-vault-2026'}
+                {healthData?.storage?.bucket || 'nyayvault-evidence'}
               </span>
             </div>
           </div>
@@ -197,9 +197,9 @@ export default function SettingsHub({ currentUser, theme, toggleTheme }) {
         <Building2 className="text-slate-400 shrink-0 mt-0.5" size={20} />
         <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
           <strong className="text-slate-900 dark:text-white block mb-0.5">
-            Ministry of Law & Justice, Government of India
+            About NyayVault
           </strong>
-          NyayVault is engineered for Problem Statement SIH-26190 to provide end-to-end cryptographic traceability, custody accountability, and Section 63 BSA compliance for digital evidence across Indian courts and law enforcement agencies.
+          NyayVault is a cloud-native evidence vault (AWS EC2 + Amazon S3) that provides end-to-end cryptographic traceability, custody accountability, and Section 63 BSA compliance for digital evidence across Indian courts and law enforcement agencies.
         </div>
       </div>
     </div>

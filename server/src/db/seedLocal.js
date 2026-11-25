@@ -38,7 +38,7 @@ async function seed() {
     { id: 'usr-1787866796708', badge: 'REG-1', name: 'Registrar Amit Kumar', role: 'REGISTRAR', dept: 'Faridabad Court Registry' },
   ];
 
-  const defaultHash = '$2b$10$f8VERr328ja8qQly0fuVsuLeCCToaD8.V6wBIhx.QLkfQGWgg.jES'; // sih2026
+  const defaultHash = '$2b$10$osOkaD8YSsEe660f4WbXGuxX7i8Lk.u4BooqfX7wzKd5npyOhBjSu'; // nyay2026
 
   for (const u of users) {
     await query(`

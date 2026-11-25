@@ -1,0 +1,1 @@
+import db from './server/src/config/db.js'; await db.initDatabase(); const res = await db.query('SELECT id, filename, is_redacted FROM documents WHERE is_redacted = true OR filename LIKE ''%REDACTED%'''); console.log(res.rows); process.exit(0);

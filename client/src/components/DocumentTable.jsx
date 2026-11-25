@@ -156,8 +156,8 @@ export default function DocumentTable({ documents = [], onRefresh }) {
     try {
       const res = await fetch(`/api/documents/${doc.id}`, { 
         headers: { 
-          'x-user-id': localStorage.getItem('sih_active_user'),
-          'Authorization': `Bearer ${localStorage.getItem('sih_token')}`
+          'x-user-id': localStorage.getItem('nv_active_user'),
+          'Authorization': `Bearer ${localStorage.getItem('nv_token')}`
         }
       });
       const fullDoc = await res.json();
@@ -295,8 +295,8 @@ export default function DocumentTable({ documents = [], onRefresh }) {
     docPdf.save(`Sec_63_BSA_${doc.filename}.pdf`);
   };
 
-  const userRole = localStorage.getItem('sih_active_role');
-  const isPolice = userRole === 'INVESTIGATING_OFFICER' || localStorage.getItem('sih_active_user')?.includes('pol');
+  const userRole = localStorage.getItem('nv_active_role');
+  const isPolice = userRole === 'INVESTIGATING_OFFICER' || localStorage.getItem('nv_active_user')?.includes('pol');
   const isTamperDetected = Boolean((liveCheckResult && !liveCheckResult.isTamperFree) || tamperState?.isTampered);
 
   return (
@@ -470,9 +470,11 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                               <td className="py-4 px-4">
                                 <div className="flex flex-col gap-1.5 items-start">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                      {doc.document_type || 'GENERAL_RECORD'}
-                                    </span>
+                                    {doc.document_type && doc.document_type !== 'UNKNOWN' && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                        {doc.document_type}
+                                      </span>
+                                    )}
                                     {doc.is_redacted && (
                                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
                                         Redacted Copy
@@ -610,9 +612,11 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                   <div>
                     <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <span>{selectedDoc.filename}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold font-mono">
-                        {selectedDoc.document_type || 'EVIDENCE'}
-                      </span>
+                      {selectedDoc.document_type && selectedDoc.document_type !== 'UNKNOWN' && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold font-mono">
+                          {selectedDoc.document_type}
+                        </span>
+                      )}
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
                       <span>Case ID: #{selectedDoc.case_id}</span>
@@ -801,7 +805,7 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                               </div>
 
                               <div className="mt-6 pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 text-center text-[10px] text-slate-400 uppercase tracking-wider">
-                                Cryptographically Indexed • NyayVault SIH 26190
+                                Cryptographically Indexed • NyayVault on AWS S3
                               </div>
                             </div>
                           ) : (
@@ -888,7 +892,7 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-3">
                               <div>
                                 <h5 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                                  Interactive Tamper Simulation (Hackathon Demo)
+                                  Interactive Tamper Simulation (Integrity Demo)
                                 </h5>
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                   Demonstrate real-time cryptographic detection by modifying 1 byte in object storage.
@@ -1075,7 +1079,7 @@ export default function DocumentTable({ documents = [], onRefresh }) {
                             </div>
 
                             <div className="mt-8 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700 text-center text-[10px] text-slate-400 uppercase tracking-wider">
-                              Cryptographically Indexed • NyayVault SIH 26190
+                              Cryptographically Indexed • NyayVault on AWS S3
                             </div>
                           </div>
                         ) : (

@@ -51,7 +51,11 @@ export async function logAuditEvent({
   const id = `aud-${uuidv4()}`;
   const timestamp = new Date().toISOString();
 
-  // Get previous block hash for chain linking
+  // Get previous block hash for chain linking.
+  // NOTE: There is a potential race condition under high concurrency: two concurrent
+  // calls can read the same previousHash before either has inserted, causing a fork
+  // in the chain. For production hardening, use a DB advisory lock (pg_advisory_lock)
+  // or serialize writes through a queue. For this demo, sequential writes are assumed.
   let previousHash = GENESIS_HASH;
   try {
     const prevRes = await query(

@@ -2,7 +2,11 @@ import crypto from 'crypto';
 import { query } from '../config/db.js';
 import { logAuditEvent, AuditActions } from './auditService.js';
 
-// In-memory keypair cache for fast demo signing per user badge
+// In-memory keypair cache for fast demo signing per user badge.
+// NOTE: This cache is NOT persistent across server restarts.
+// If the server restarts, previously generated keys are lost and documents signed
+// before the restart cannot be re-verified using this cache.
+// For production use, keys must be stored securely in a database or HSM.
 const keyPairCache = new Map();
 
 /**

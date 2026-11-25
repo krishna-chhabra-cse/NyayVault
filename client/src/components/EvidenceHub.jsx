@@ -126,8 +126,8 @@ export default function EvidenceHub({ onSelectCase }) {
     try {
       const res = await fetch(`/api/documents/${doc.id}`, { 
         headers: { 
-          'x-user-id': localStorage.getItem('sih_active_user') || 'usr-pol-042',
-          'Authorization': `Bearer ${localStorage.getItem('sih_token') || ''}`
+          'x-user-id': localStorage.getItem('nv_active_user') || 'usr-pol-042',
+          'Authorization': `Bearer ${localStorage.getItem('nv_token') || ''}`
         }
       });
       if (res.ok) {
@@ -256,7 +256,7 @@ export default function EvidenceHub({ onSelectCase }) {
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/40">
               <Layers size={11} className="text-blue-600 dark:text-blue-400" />
-              {t('Ministry of Justice • Secure Evidence Portal')}
+              {t('Secure Cloud Evidence Portal')}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -521,9 +521,11 @@ export default function EvidenceHub({ onSelectCase }) {
 
                       {/* Document Type */}
                       <td className="py-4 px-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                          {doc.document_type || 'GENERAL_RECORD'}
-                        </span>
+                        {doc.document_type && doc.document_type !== 'UNKNOWN' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            {doc.document_type}
+                          </span>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -668,9 +670,11 @@ export default function EvidenceHub({ onSelectCase }) {
                         {doc.case_number || 'CR-2026-0045'}
                       </button>
 
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {doc.document_type || 'GENERAL'}
-                      </span>
+                      {doc.document_type && doc.document_type !== 'UNKNOWN' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {doc.document_type}
+                        </span>
+                      )}
                     </div>
                   </div>
 

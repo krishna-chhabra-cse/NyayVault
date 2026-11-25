@@ -46,7 +46,7 @@ export async function sendEvidenceUploadNotification({ caseId, caseNumber, caseT
     const htmlBody = `
       <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <div style="background-color: #1e293b; padding: 20px; text-align: center;">
-          <h2 style="color: #ffffff; margin: 0;">SIH Evidence Vault</h2>
+          <h2 style="color: #ffffff; margin: 0;">NyayVault Evidence Vault</h2>
         </div>
         <div style="padding: 30px; background-color: #ffffff;">
           <h3 style="color: #0f172a; margin-top: 0;">New Evidence Uploaded</h3>
@@ -72,7 +72,7 @@ export async function sendEvidenceUploadNotification({ caseId, caseNumber, caseT
           </div>
         </div>
         <div style="background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #64748b;">
-          This is an automated notification from the Digital Evidence Management System (SIH26190).
+          This is an automated notification from the NyayVault Cloud Evidence Vault.
         </div>
       </div>
     `;
@@ -84,10 +84,11 @@ export async function sendEvidenceUploadNotification({ caseId, caseNumber, caseT
       return;
     }
 
-    // Send email
+    // Send email — use BCC so recipients cannot see each other's addresses
     await mailer.sendMail({
       from: process.env.SMTP_FROM || '"Evidence Vault" <noreply@evidencevault.local>',
-      to: toEmails,
+      to: process.env.SMTP_FROM || '"Evidence Vault" <noreply@evidencevault.local>',
+      bcc: toEmails,
       subject: `🔔 New Evidence Uploaded — Case ${caseNumber}`,
       html: htmlBody,
     });

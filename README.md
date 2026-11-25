@@ -1,108 +1,138 @@
-# SIH26190: Digital Evidence Vault & Management System 🛡️⚖️
+# NyayVault: Cloud-Native Digital Evidence Vault on AWS
 
-[![Live Portal](https://img.shields.io/badge/Official_Portal-nyayvault.in-2563eb?style=for-the-badge&logo=google-chrome&logoColor=white)](https://nyayvault.in)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![React](https://img.shields.io/badge/React-18-blue)
-![Node.js](https://img.shields.io/badge/Node.js-v20-green)
-![PostgreSQL](https://img.shields.io/badge/Database-PGlite%20%7C%20PostgreSQL-336791)
+![AWS EC2](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonec2&logoColor=white)
+![Amazon S3](https://img.shields.io/badge/AWS-S3-569A31?logo=amazons3&logoColor=white)
+![IAM](https://img.shields.io/badge/AWS-IAM%20Role-DD344C?logo=amazonaws&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-336791?logo=postgresql&logoColor=white)
 
-> **Built for the Smart India Hackathon (Problem Statement SIH26190)**  
-> 🌐 **Live Production Portal:** [https://nyayvault.in](https://nyayvault.in) (or [https://www.nyayvault.in](https://www.nyayvault.in))
+**Live:** <https://nyayvault.in>
 
-The **Digital Evidence Vault (NyayVault)** is a secure, military-grade document management system designed to completely digitize the Indian judicial and law enforcement workflow. It replaces vulnerable physical evidence lockers with an immutable, cryptographically secured, AI-powered digital vault.
+NyayVault is a secure, cloud-hosted digital evidence management system for police, forensic labs,
+lawyers and courts. Evidence files (FIRs, forensic reports, court orders, media) are stored in a
+private **Amazon S3** vault, the API runs on **Amazon EC2**, and every file is SHA-256 hashed on
+upload so any tampering is detected the moment it is opened.
 
----
-
-## ✨ Key Features
-
-*   🔐 **Role-Based Access Control (RBAC):** Strict partitioning of evidence. Police (IO), Forensics, Judges, Prosecutors, and Defense Counsel only see documents they are legally authorized to access.
-*   ⛓️ **Cryptographic Chain of Custody:** Every upload, download, and redaction is logged immutably. Documents are hashed (SHA-256) upon upload; live verification ensures zero tampering.
-*   🧠 **AI-Powered OCR & Classification:** Automatically extracts text from uploaded FIRs, Remand Applications, and Forensics Reports. An integrated LLM classifies the document type (e.g., *FIR*, *Court Order*) and assigns a confidence score.
-*   ⬛ **Smart Redaction Engine:** Protect sensitive PII (Aadhar numbers, Bank Accounts, Victim Names) with a single click. Generates a cloned, redacted copy while preserving the original hash.
-*   🤖 **Context-Aware Judicial AI:** Judges and IOs can chat directly with an AI assistant that uses RAG (Retrieval-Augmented Generation) to answer questions based *only* on the specific case files.
+> Course project for **UCS531 Cloud Computing**. NyayVault began as a hackathon prototype; this
+> version re-architects it as a cloud-native application on AWS.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## ☁️ AWS Architecture
 
-### Frontend
-*   **Framework:** React 18 + Vite
-*   **Styling:** Tailwind CSS (Custom Dark UI for extended forensic analysis)
-*   **Deployment:** Vercel
+```mermaid
+flowchart TD
+    U["Users<br/>Police · Forensics · Lawyers · Judges"] -->|HTTPS| FE["React + Vite frontend<br/>(CDN)"]
+    FE -->|"REST API · JWT"| EC2
 
-### Backend
-*   **Runtime:** Node.js + Express
-*   **Database:** PostgreSQL (with embedded **PGlite** seamless fallback for local dev)
-*   **Storage:** S3-Compatible Object Storage (MinIO)
-*   **AI Engine:** OpenRouter API (Gemini 2.5 Flash / Llama 3) for OCR extraction and RAG queries.
-*   **Deployment:** AWS EC2 + PM2
+    subgraph AWS["AWS Cloud (VPC)"]
+        EC2["Amazon EC2 (Ubuntu)<br/>Node.js + Express, PM2<br/>Security Group: 22 / 5000"]
+        PG[("PostgreSQL + pgvector<br/>self-managed on EC2")]
+        S3[("Amazon S3: private evidence bucket<br/>Block Public Access · Versioning<br/>SSE-S3 / SSE-KMS encryption")]
+        IAM["IAM Role<br/>(instance profile, least privilege)"]
+        KMS["AWS KMS<br/>(aws/s3 managed key)"]
+        CW["Amazon CloudWatch<br/>metrics + alarms"]
+        EC2 -->|"metadata, audit ledger, vectors"| PG
+        EC2 -->|"PutObject / GetObject"| S3
+        IAM -.->|"temporary credentials"| EC2
+        S3 -.-> KMS
+        EC2 -.-> CW
+    end
+
+    EC2 -->|"prompts + context"| AI["External LLM API<br/>(Gemini 2.5 Flash)"]
+```
+
+| AWS service | How NyayVault uses it |
+|---|---|
+| **Amazon EC2** | Hosts the Node.js/Express API (managed by PM2) and the PostgreSQL + pgvector database. Security Group allows only SSH (22) and the API port. |
+| **Amazon S3** | The evidence vault. Private bucket with Block Public Access, versioning (old versions are kept, so evidence can't be silently overwritten), and server-side encryption. Objects use random, case-scoped keys: `cases/<caseId>/documents/<docId>/<file>`. |
+| **AWS IAM** | The EC2 instance assumes an IAM role (instance profile) scoped to just this bucket, so **no AWS access keys are stored on the server**. |
+| **AWS KMS** | Files marked *Sensitive Medical / Forensic* are encrypted with SSE-KMS (AWS-managed `aws/s3` key); all other files use SSE-S3 (AES-256). |
+| **Amazon CloudWatch** | EC2 CPU / network / status-check metrics and an alarm on instance health. |
+
+`GET /api/health` reports the live storage driver (`Amazon S3`), bucket, region, and auth mode
+(`IAM role (instance profile)`). The Settings page in the app shows the same information.
+
+AWS setup steps (bucket, IAM role, CloudWatch) are in **[docs/AWS_SETUP.md](docs/AWS_SETUP.md)**.
 
 ---
 
-## 📖 The "State vs. Hardik" Demo Workflow
+## ✨ Features
 
-This system is built to reflect the exact lifecycle of a criminal case in the Indian Judicial System:
+- **Role-Based Access Control:** investigators, forensic examiners, prosecutors, defence counsel,
+  registrars and judges each see only the evidence they are authorised for.
+- **Cryptographic chain of custody:** SHA-256 on upload, live re-hash of the S3 object on every
+  access, and an append-only audit ledger of every upload, view, download and redaction.
+- **Tamper demo:** flip one byte of a stored S3 object and watch the integrity check turn red, then restore it.
+- **AI document intelligence:** OCR, automatic document classification, and PII detection/redaction
+  (the redacted copy is a new S3 object; the original and its hash stay unchanged).
+- **Case assistant (RAG):** questions are answered only from the case's own documents, using
+  pgvector semantic search.
 
-1.  **Investigation (`POL-1`):** An Investigating Officer uploads the Victim Complaint, FIR (Sec 318(4) BNS), and Remand Application. Sensitive PII is instantly redacted.
-2.  **Forensics (`FOR-1`):** A Cyber Analyst uploads the Bank Tracing & Digital Evidence Report linking the accused to the crime.
-3.  **Defense (`ADV-1`):** The Defense Counsel securely uploads a Bail Application.
-4.  **Prosecution (`ADV-2`):** The State Prosecutor uploads objections to the bail based on the forensic evidence.
-5.  **Registry (`REG-1`):** The Court Registrar issues digital summons to bank witnesses and sets the trial schedule.
-6.  **Judiciary (`JUD-1`):** The Presiding Judge reviews all partitioned folders, uses the AI Assistant to cross-examine evidence timelines, and uploads the Final Judgment.
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, Tailwind CSS |
+| API | Node.js 20, Express, JWT, Multer, PM2 on **AWS EC2** |
+| Object storage | **Amazon S3** via AWS SDK v3 (`@aws-sdk/client-s3`) |
+| Database | PostgreSQL 16 + pgvector (embedded PGlite fallback for local dev) |
+| AI | Gemini 2.5 Flash (Google AI Studio or OpenRouter), Tesseract OCR |
 
 ---
 
-## 🚀 Local Development Setup
+## 🚀 Running Locally
 
-### 1. Clone the Repository
+Local development uses **MinIO** as an S3-compatible stand-in, so the same storage code runs
+against real S3 in production.
+
 ```bash
-git clone https://github.com/your-org/sih-evidence-vault.git
-cd sih-evidence-vault
+# everything in Docker (Postgres + MinIO + API + frontend)
+docker compose up --build
+# frontend: http://localhost:5173   API: http://localhost:5001   MinIO console: http://localhost:9001
 ```
 
-### 2. Backend Setup
+Or run it manually:
+
 ```bash
-cd server
-npm install
-```
-Create a `.env` file in the `server` directory:
-```env
-PORT=5000
-DATABASE_URL=postgresql://sih_admin:sih_secure_password_2026@localhost:5432/sih26190_evidence_db
-AWS_S3_ENDPOINT=http://localhost:9000
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadminpassword
-AWS_S3_BUCKET_NAME=sih26190-evidence
-JWT_SECRET=your_super_secret_jwt_key
-GEMINI_API_KEY=your_google_ai_studio_api_key
-LLM_MODEL=gemini-3.6-flash
-EMBEDDING_MODEL=gemini-embedding-001
-```
-For Docker Compose, keep the same `GEMINI_API_KEY`, `LLM_MODEL`, and
-`EMBEDDING_MODEL` values in `server/.env`; the backend container reads that
-ignored file at startup while still using the Compose PostgreSQL and MinIO
-service URLs. OpenRouter is also supported with `OPENROUTER_API_KEY`.
-
-Start the backend:
-```bash
-# Uses PGlite automatically if PostgreSQL is not running!
-node src/server.js 
+cd server && npm install && cp .env.example .env && node src/server.js
+cd client && npm install && npm run dev
 ```
 
-### 3. Frontend Setup
-```bash
-cd client
-npm install
-npm run dev
+Demo logins: badges `POL-1`, `JUD-1`, `ADV-1`, `ADV-2`, `REG-1` with password `nyay2026`
+(there's also a quick-fill button on the login page).
+
+## 🚢 Deploying to AWS
+
+1. Create the S3 bucket and IAM role ([docs/AWS_SETUP.md](docs/AWS_SETUP.md)).
+2. On EC2, set these in `~/server/.env`: `AWS_REGION`, `AWS_S3_BUCKET_NAME`, `DATABASE_URL`, `JWT_SECRET`, and
+   the AI key. Leave `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_S3_ENDPOINT` **unset** so the IAM role is used.
+3. From your machine:
+   ```powershell
+   $env:EC2_KEY_PATH = "C:\path\to\key.pem"; $env:EC2_HOST = "ubuntu@<ec2-ip>"
+   ./deploy_backend.ps1
+   ```
+4. Copy any evidence that was saved on the EC2 disk into S3: `node scripts/sync_local_to_s3.js` (run on EC2).
+
+## 🛡️ Security
+
+- S3 bucket is private, has Block Public Access on, and encrypts everything at rest. The browser never gets a direct S3 URL; files are streamed through the API after an RBAC check.
+- No long-lived AWS keys on the server (IAM instance role).
+- JWTs expire after 24 h. Maintenance endpoints (`/api/dev/*`) only work from the EC2 host itself or with an admin key.
+- Evidence records are append-only. Redaction creates a new object and never overwrites the original.
+
+## 📁 Repository Layout
+
 ```
-
----
-
-## 🛡️ Security Posture
-*   **File Isolation:** Files are stored on S3 with random UUID keys, never exposed publicly.
-*   **Token Expiry:** JWT tokens expire every 24 hours.
-*   **Immutability:** Once an evidence file is uploaded, the database record cannot be overwritten (only appended with redacted clones).
+client/           React frontend
+server/           Express API (src/storage/s3Client.js = S3 integration)
+server/scripts/   migrations + local-disk → S3 sync
+docs/             AWS setup guide
+demo_data/        sample case documents for the demo
+archive/          earlier hackathon material and one-off scripts (not used by the app)
+```
 
 ## 📄 License
-This project is licensed under the MIT License. Developed for SIH26190.
+
+MIT

@@ -1,9 +1,8 @@
 const BASE_URL = '/api';
 
 function getAuthHeader() {
-  const token = localStorage.getItem('sih_token');
-  const userId = localStorage.getItem('sih_active_user') || 'usr-pol-042'; // Fallback for older components
-  const headers = { 'x-user-id': userId };
+  const token = localStorage.getItem('nv_token');
+  const headers = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -68,9 +67,12 @@ export async function getGlobalAuditLogs(limit = 100) {
   return fetchApi(`/audit?limit=${limit}`);
 }
 
-export async function uploadDocument(caseId, file) {
+export async function uploadDocument(caseId, file, isMedical = false) {
   const formData = new FormData();
   formData.append('file', file);
+  if (isMedical) {
+    formData.append('isMedical', 'true');
+  }
   
   // Custom fetch to handle FormData properly (without setting Content-Type, let browser set boundary)
   const res = await fetch(`${BASE_URL}/cases/${caseId}/documents`, {

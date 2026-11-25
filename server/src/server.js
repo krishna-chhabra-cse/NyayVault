@@ -1,13 +1,4 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load .env
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-
+import './config/env.js';
 import app from './app.js';
 import { initDatabase } from './config/db.js';
 import { initStorage } from './storage/s3Client.js';
@@ -16,12 +7,12 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    console.log('--- Starting SIH26190 Secure Document Management System ---');
+    console.log('--- Starting NyayVault Cloud Evidence Vault API ---');
     
     // 1. Initialize Database (PostgreSQL or Embedded PGlite fallback)
     await initDatabase();
 
-    // 2. Initialize Object Storage (MinIO or Local S3 emulation fallback)
+    // 2. Initialize Object Storage (Amazon S3 / MinIO, with local disk fallback)
     await initStorage();
 
     // 2.5 Start Background Processing Worker
@@ -40,5 +31,3 @@ async function startServer() {
 }
 
 startServer();
-
-// triggered restart

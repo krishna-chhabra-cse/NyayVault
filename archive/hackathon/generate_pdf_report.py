@@ -270,7 +270,7 @@ def build_pdf_report(filename):
     story.append(Paragraph(
         "The system follows a multi-tier microservices-compatible architecture: "
         "<b>Frontend:</b> React 18, Vite, Tailwind CSS Dark UI, Framer Motion. "
-        "<b>Backend:</b> Node.js, Express, JWT Auth, PM2 on AWS EC2 (<code>3.82.17.79</code>). "
+        "<b>Backend:</b> Node.js, Express, JWT Auth, PM2 on AWS EC2 (<code>EC2 instance</code>). "
         "<b>Database:</b> PostgreSQL with <code>pgvector</code> + embedded <code>PGlite</code> engine for instant resilience. "
         "<b>Storage:</b> S3-Compatible MinIO object store with local filesystem caching.",
         body_style

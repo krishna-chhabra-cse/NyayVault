@@ -63,7 +63,7 @@ function AppContent() {
   
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!localStorage.getItem('sih_token');
+    return !!localStorage.getItem('nv_token');
   });
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -71,7 +71,7 @@ function AppContent() {
 
   // Theme management
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('sih_theme') || 'light';
+    return localStorage.getItem('nv_theme') || 'light';
   });
 
   useEffect(() => {
@@ -80,12 +80,12 @@ function AppContent() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('sih_theme', theme);
+    localStorage.setItem('nv_theme', theme);
   }, [theme]);
 
   // Load user profile if authenticated
   useEffect(() => {
-    const token = localStorage.getItem('sih_token');
+    const token = localStorage.getItem('nv_token');
     if (!token) {
       setAuthLoading(false);
       return;
@@ -103,7 +103,7 @@ function AppContent() {
         setIsAuthenticated(true);
       })
       .catch(() => {
-        localStorage.removeItem('sih_token');
+        localStorage.removeItem('nv_token');
         setIsAuthenticated(false);
       })
       .finally(() => {
@@ -122,8 +122,8 @@ function AppContent() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('sih_token');
-    localStorage.removeItem('sih_active_user');
+    localStorage.removeItem('nv_token');
+    localStorage.removeItem('nv_active_user');
     setIsAuthenticated(false);
     setCurrentUser(null);
     setActiveCaseId(null);

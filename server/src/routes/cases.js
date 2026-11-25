@@ -36,7 +36,7 @@ router.get('/', async (req, res, next) => {
 router.post('/', requireRole(['INVESTIGATING_OFFICER', 'REGISTRAR', 'COURT_REGISTRAR', 'ADMIN']), async (req, res, next) => {
   try {
     const { caseNumber, title, description, securityLevel } = req.body;
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
 
     const newCase = await createCase({
       caseNumber,
@@ -103,12 +103,13 @@ router.post('/:caseId/documents', requireRole(['INVESTIGATING_OFFICER', 'FORENSI
       });
     }
 
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
     const document = await uploadDocument({
       caseId: req.params.caseId,
       file: req.file,
       user: req.user,
       ipAddress,
+      isMedical: req.body.isMedical === 'true' || req.body.isMedical === true,
     });
 
     // Fire and forget email notification
@@ -273,7 +274,7 @@ router.get('/:caseId/contradictions', async (req, res, next) => {
 router.patch('/:caseId/status', async (req, res, next) => {
   try {
     const { status } = req.body;
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
     
     if (!status) {
       return res.status(400).json({ success: false, error: 'Status is required' });
@@ -310,7 +311,7 @@ router.get('/:caseId/assignments', async (req, res, next) => {
 router.post('/:caseId/assignments', async (req, res, next) => {
   try {
     const { judgeId, prosecutorId, defenseId, hearingDate, notes } = req.body;
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
 
     const updatedCase = await assignCaseActors({
       caseId: req.params.caseId,

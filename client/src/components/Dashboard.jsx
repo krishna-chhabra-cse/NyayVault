@@ -135,7 +135,7 @@ export default function Dashboard({ currentUser, onSelectCase, onViewChange }) {
           <div className="flex items-center gap-2 mb-1.5">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/40">
               <Shield size={11} className="text-blue-600 dark:text-blue-400" />
-              {t('Ministry of Justice • Secure Evidence Portal')}
+              {t('Secure Cloud Evidence Portal')}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">

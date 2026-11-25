@@ -1,7 +1,7 @@
 {
-  "name": "sih26190-backend",
+  "name": "nyayvault-backend",
   "version": "1.0.0",
-  "description": "Secure Document Management Backend with MinIO & PostgreSQL (SIH26190)",
+  "description": "NyayVault API: Node.js on AWS EC2 with Amazon S3 and PostgreSQL",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
@@ -29,11 +29,11 @@
   },
   "keywords": [
     "evidence",
-    "sih26190",
+    "aws",
     "minio",
     "postgres",
     "sha256"
   ],
-  "author": "SIH Team",
+  "author": "NyayVault Team",
   "license": "ISC"
 }

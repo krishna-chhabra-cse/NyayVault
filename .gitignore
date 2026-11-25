@@ -43,3 +43,6 @@ build/
 *.pem
 *.key
 *.cert
+
+# OCR language data (auto-downloaded by tesseract.js)
+*.traineddata

@@ -79,7 +79,7 @@ router.get('/:documentId', verifyDocAccess, async (req, res, next) => {
  */
 router.get('/:documentId/verify', verifyDocAccess, async (req, res, next) => {
   try {
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
     const result = await verifyDocumentIntegrity(req.params.documentId, req.user, ipAddress);
 
     res.json({
@@ -98,7 +98,7 @@ router.get('/:documentId/verify', verifyDocAccess, async (req, res, next) => {
  */
 router.get('/:documentId/download', verifyDocAccess, async (req, res, next) => {
   try {
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
     const { stream, filename, contentType, contentLength, sha256Hash } =
       await downloadDocument(req.params.documentId, req.user, ipAddress);
 
@@ -152,7 +152,7 @@ router.post('/:documentId/redact/suggest', verifyDocAccess, requireRole(['INVEST
  */
 router.post('/:documentId/redact/apply', verifyDocAccess, requireRole(['INVESTIGATING_OFFICER', 'FORENSIC_EXAMINER', 'ADMIN', 'SENIOR_OFFICER', 'REGISTRAR', 'JUDICIAL_OFFICER', 'LAWYER_PROSECUTION', 'LAWYER_DEFENSE']), async (req, res, next) => {
   try {
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
     const { redactions } = req.body;
     
     if (!Array.isArray(redactions) || redactions.length === 0) {
@@ -173,7 +173,7 @@ router.post('/:documentId/redact/apply', verifyDocAccess, requireRole(['INVESTIG
  */
 router.post('/:documentId/sign', verifyDocAccess, async (req, res, next) => {
   try {
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const ipAddress = req.ip || req.socket?.remoteAddress;
     const { signExhibitDocument } = await import('../services/pkiService.js');
     const signatureMetadata = await signExhibitDocument(req.params.documentId, req.user, ipAddress);
 

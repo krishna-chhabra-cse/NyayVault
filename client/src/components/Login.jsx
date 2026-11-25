@@ -24,15 +24,15 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GOVT_SSO_PROFILES = [
+const DEMO_SSO_PROFILES = [
   {
     badge: 'JUD-1',
     name: 'Hon. Justice Vatsal Singh',
     designation: 'Principal District & Sessions Judge',
     department: 'Faridabad District Court',
     roleLabel: 'Judicial Officer',
-    ssoId: 'justice.vatsal@gov.in',
-    secLevel: 'ePramaan Level 3 (Class-3 DSC Token)',
+    ssoId: 'justice.vatsal@nyayvault.demo',
+    secLevel: 'Demo role · Level 3',
     icon: Scale,
     color: 'emerald'
   },
@@ -42,8 +42,8 @@ const GOVT_SSO_PROFILES = [
     designation: 'Cyber Crime Investigation Unit Head',
     department: 'Cyber Crime Branch, Police Dept',
     roleLabel: 'Investigating Officer',
-    ssoId: 'k.chhabra@police.gov.in',
-    secLevel: 'ePramaan Level 3 (Govt Biometric MFA)',
+    ssoId: 'k.chhabra@police.nyayvault.demo',
+    secLevel: 'Demo role · Level 3',
     icon: ShieldCheck,
     color: 'blue'
   },
@@ -53,8 +53,8 @@ const GOVT_SSO_PROFILES = [
     designation: 'State Prosecutor',
     department: 'Directorate of Prosecution, Haryana',
     roleLabel: 'State Prosecution',
-    ssoId: 'p.kapoor@prosecution.gov.in',
-    secLevel: 'ePramaan Level 2 (Bar Council Verified)',
+    ssoId: 'p.kapoor@prosecution.nyayvault.demo',
+    secLevel: 'Demo role · Level 2',
     icon: Users,
     color: 'purple'
   },
@@ -64,8 +64,8 @@ const GOVT_SSO_PROFILES = [
     designation: 'Senior Defense Counsel',
     department: 'Bar Council of Punjab & Haryana',
     roleLabel: 'Defense Counsel',
-    ssoId: 'v.singh@barcouncil.gov.in',
-    secLevel: 'ePramaan Level 2 (Bar Council Verified)',
+    ssoId: 'v.singh@barcouncil.nyayvault.demo',
+    secLevel: 'Demo role · Level 2',
     icon: FileText,
     color: 'amber'
   },
@@ -75,8 +75,8 @@ const GOVT_SSO_PROFILES = [
     designation: 'Court Registry & Evidence In-Charge',
     department: 'Faridabad Court Registry',
     roleLabel: 'Court Registry',
-    ssoId: 'registry.fbd@court.gov.in',
-    secLevel: 'ePramaan Level 3 (Official Seal)',
+    ssoId: 'registry.fbd@court.nyayvault.demo',
+    secLevel: 'Demo role · Level 3',
     icon: Building2,
     color: 'indigo'
   }
@@ -95,7 +95,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
 
   const handleQuickFill = (roleBadge) => {
     setBadgeNumber(roleBadge);
-    setPassword('sih2026');
+    setPassword('nyay2026');
     setError('');
   };
 
@@ -117,9 +117,9 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
       throw new Error(data?.error || `Authentication failed (${res.status})`);
     }
 
-    localStorage.setItem('sih_token', data.token);
-    localStorage.setItem('sih_active_user', data.user.id);
-    localStorage.setItem('sih_active_role', data.user.role);
+    localStorage.setItem('nv_token', data.token);
+    localStorage.setItem('nv_active_user', data.user.id);
+    localStorage.setItem('nv_active_role', data.user.role);
     
     onLoginSuccess(data.user, data.token);
   };
@@ -150,10 +150,10 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
       setSsoStep(3);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      await performLogin(profile.badge, 'sih2026');
+      await performLogin(profile.badge, 'nyay2026');
       setShowSSOModal(false);
     } catch (err) {
-      setSsoError(err.message || 'ePramaan SSO authentication failed. Please try again.');
+      setSsoError(err.message || 'Demo sign-in failed. Please try again.');
       setSsoProcessing(null);
     }
   };
@@ -167,22 +167,6 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
       {/* Top Header */}
       <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-3 sm:pb-4 shrink-0">
         <div className="flex items-center gap-3 sm:gap-6 flex-wrap sm:flex-nowrap">
-          {/* Official Department of Justice Portal Link & Logo */}
-          <a
-            href="https://doj.gov.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center bg-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-slate-200/90 dark:border-slate-700 shadow-xs hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group"
-            title="Department of Justice, Ministry of Law & Justice, Government of India (Official Portal - Opens in new tab)"
-          >
-            <img 
-              src="/doj-logo.png" 
-              alt="Department of Justice, Ministry of Law & Justice, Government of India" 
-              className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]" 
-            />
-          </a>
-
-          <div className="h-10 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
 
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="NyayVault Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-md shrink-0" />
@@ -310,7 +294,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
               <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-xl p-2 text-center space-y-1">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-semibold text-blue-900 dark:text-blue-200">✨ Auto-Fill Demo Credentials:</span>
-                  <span className="font-mono font-bold text-blue-700 dark:text-blue-300">Pass: sih2026</span>
+                  <span className="font-mono font-bold text-blue-700 dark:text-blue-300">Pass: nyay2026</span>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-1">
                   {['POL-1', 'JUD-1', 'ADV-1', 'ADV-2', 'REG-1'].map((role) => (
@@ -411,8 +395,8 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
                 >
                   <Landmark size={13} className="text-slate-600 dark:text-slate-400" />
                   <div className="text-left leading-none">
-                    <span className="font-bold block text-[10px]">Login with Government SSO</span>
-                    <span className="text-[8px] text-slate-400 dark:text-slate-500 font-normal">(ePramaan / MeriPehchaan)</span>
+                    <span className="font-bold block text-[10px]">Quick Login with Demo Profile</span>
+                    <span className="text-[8px] text-slate-400 dark:text-slate-500 font-normal">(simulated SSO)</span>
                   </div>
                 </button>
               </div>
@@ -423,7 +407,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
               <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-1">
                 <ShieldCheck size={12} className="text-emerald-600 dark:text-emerald-400" /> BNS & BSA 2023 Compliant
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-slate-500">Secure | Auditable | Government Certified</p>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500">Secure | Auditable | Hosted on AWS</p>
             </div>
           </motion.div>
         </div>
@@ -432,10 +416,10 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
 
       {/* Footer copyright */}
       <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium shrink-0 pt-1">
-        NyayVault Secure Evidence Portal © 2026 · Department of Justice · Ministry of Law & Justice · Government of India
+        NyayVault · Cloud-Native Digital Evidence Vault on AWS · © 2026
       </div>
 
-      {/* MeriPehchaan / ePramaan Government SSO Modal */}
+      {/* Demo profile quick-login modal (simulated SSO) */}
       <AnimatePresence>
         {showSSOModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
@@ -456,13 +440,13 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">MeriPehchaan (NSSO)</h3>
+                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Demo Profile Login</h3>
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                        ePramaan L3 Active
+                        Simulated
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      National Single Sign-On Portal · Ministry of Electronics & IT (MeitY)
+                      Simulated single sign-on for the demo role profiles
                     </p>
                   </div>
                 </div>
@@ -490,7 +474,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
 
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                        Authenticating via MeriPehchaan
+                        Signing in
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Verifying credentials for <span className="font-semibold text-slate-700 dark:text-slate-200">{ssoProcessing.name}</span>
@@ -506,7 +490,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
                           <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-600 shrink-0" />
                         )}
                         <span className={ssoStep >= 1 ? 'font-semibold text-slate-800 dark:text-slate-200' : 'text-slate-400'}>
-                          Connecting to MeriPehchaan Gateway
+                          Contacting auth API on AWS EC2
                         </span>
                       </div>
 
@@ -517,7 +501,7 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
                           <Loader2 size={15} className="text-blue-500 animate-spin shrink-0" />
                         )}
                         <span className={ssoStep >= 2 ? 'font-semibold text-slate-800 dark:text-slate-200' : 'text-slate-400'}>
-                          Validating ePramaan DSC Certificate
+                          Issuing signed JWT session
                         </span>
                       </div>
 
@@ -546,16 +530,16 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }) {
                     <div className="bg-blue-50/60 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-100 dark:border-blue-900/60 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
                       <ShieldCheck size={16} className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold leading-tight">Federated Single Sign-On (ePramaan)</p>
+                        <p className="font-bold leading-tight">Simulated Single Sign-On</p>
                         <p className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
-                          Select an authorized government service profile below to authenticate with official MeriPehchaan identity verification:
+                          Pick a demo role profile below to sign in instantly:
                         </p>
                       </div>
                     </div>
 
                     {/* Profiles List */}
                     <div className="space-y-2">
-                      {GOVT_SSO_PROFILES.map((prof) => {
+                      {DEMO_SSO_PROFILES.map((prof) => {
                         const IconComponent = prof.icon;
                         return (
                           <button
