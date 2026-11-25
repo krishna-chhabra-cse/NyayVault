@@ -98,7 +98,16 @@ router.post('/assign', async (req, res) => {
   }
 });
 
-const tamperBackupMap = new Map();
+
+const backupKey = (docId) => `integrity-demo-backups/${docId}`;
+const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
+
+async function readObject(getObjectStream, key) {
+  const { stream } = await getObjectStream({ key });
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  return Buffer.concat(chunks);
+}
 
 /**
  * POST /api/dev/tamper/:documentId
@@ -112,15 +121,12 @@ router.post('/tamper/:documentId', async (req, res) => {
     if (docRes.rows.length === 0) return res.status(404).json({ error: 'Document not found' });
     const doc = docRes.rows[0];
 
-    const { getObjectStream, uploadObject } = await import('../storage/s3Client.js');
-    const { stream } = await getObjectStream({ key: doc.storage_key });
+    const { getObjectStream, uploadObject, objectExists } = await import('../storage/s3Client.js');
+    const originalBuffer = await readObject(getObjectStream, doc.storage_key);
 
-    const chunks = [];
-    for await (const chunk of stream) chunks.push(chunk);
-    const originalBuffer = Buffer.concat(chunks);
-
-    if (!tamperBackupMap.has(doc.id)) {
-      tamperBackupMap.set(doc.id, originalBuffer);
+    // Keep a durable copy of the authentic bytes in S3 so restore survives server restarts.
+    if (sha256(originalBuffer) === doc.sha256_hash && !(await objectExists({ key: backupKey(doc.id) }))) {
+      await uploadObject({ key: backupKey(doc.id), buffer: originalBuffer, contentType: doc.mime_type });
     }
 
     // Mutate 1 byte
@@ -144,7 +150,8 @@ router.post('/tamper/:documentId', async (req, res) => {
 
 /**
  * POST /api/dev/restore/:documentId
- * Restores original un-tampered storage bytes.
+ * Restores the authentic bytes from the S3 backup copy (verified against the stored SHA-256).
+ * Never rewrites the stored hash: if no authentic copy exists, the document stays flagged.
  */
 router.post('/restore/:documentId', async (req, res) => {
   try {
@@ -153,22 +160,23 @@ router.post('/restore/:documentId', async (req, res) => {
     if (docRes.rows.length === 0) return res.status(404).json({ error: 'Document not found' });
     const doc = docRes.rows[0];
 
-    const { getObjectStream, uploadObject } = await import('../storage/s3Client.js');
+    const { getObjectStream, uploadObject, deleteObject, objectExists } = await import('../storage/s3Client.js');
 
-    if (tamperBackupMap.has(doc.id)) {
-      const originalBuffer = tamperBackupMap.get(doc.id);
-      await uploadObject({ key: doc.storage_key, buffer: originalBuffer, contentType: doc.mime_type });
-      tamperBackupMap.delete(doc.id);
-    } else {
-      // Fallback: calculate current storage hash and sync database sha256_hash so evidence is verified authentic
-      const { stream } = await getObjectStream({ key: doc.storage_key });
-      const chunks = [];
-      for await (const chunk of stream) chunks.push(chunk);
-      const currentBuffer = Buffer.concat(chunks);
-      
-      const liveHash = crypto.createHash('sha256').update(currentBuffer).digest('hex');
-      await query('UPDATE documents SET sha256_hash = $1 WHERE id = $2', [liveHash, doc.id]);
+    const current = await readObject(getObjectStream, doc.storage_key);
+    if (sha256(current) === doc.sha256_hash) {
+      return res.json({ success: true, documentId: doc.id, isTampered: false, message: 'Object already authentic.' });
     }
+
+    if (!(await objectExists({ key: backupKey(doc.id) }))) {
+      return res.status(409).json({ error: 'No authentic backup copy found; document remains flagged as tampered.' });
+    }
+    const backup = await readObject(getObjectStream, backupKey(doc.id));
+    if (sha256(backup) !== doc.sha256_hash) {
+      return res.status(409).json({ error: 'Backup copy does not match the original SHA-256; refusing to restore.' });
+    }
+
+    await uploadObject({ key: doc.storage_key, buffer: backup, contentType: doc.mime_type });
+    await deleteObject({ key: backupKey(doc.id) });
 
     res.json({
       success: true,
